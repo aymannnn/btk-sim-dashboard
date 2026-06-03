@@ -33,19 +33,37 @@ def process_snapshot(zip_file_path):
         exam_topic_df = pd.read_csv(os.path.join(target_dir, 'examTopic.csv'))
         exam_titles_df = pd.read_csv(os.path.join(target_dir, 'ExamTitles.csv'))
         
-        # Load ChatMessages optimized - only need totalTokens per chat
+        # Load ChatMessages optimized - only need totalTokens and role per chat
         # Since it's large, we only load specific columns
         try:
             chat_msgs_df = pd.read_csv(
                 os.path.join(target_dir, 'ChatMessages.csv'), 
-                usecols=['chatID', 'totalTokens'],
+                usecols=['chatID', 'totalTokens', 'role', 'content'],
                 engine='c' # fast parser
             )
-            # Aggregate tokens per chat
+            
+            # Extract transcripts efficiently
+            valid_content = chat_msgs_df.dropna(subset=['content']).copy()
+            valid_content = valid_content[valid_content['content'].str.strip().str.startswith('[')]
+            transcripts = valid_content.drop_duplicates(subset=['chatID'], keep='last')[['chatID', 'content']]
+            transcripts.rename(columns={'content': 'transcript'}, inplace=True)
+            
+            # Aggregate tokens per chat (summing per user request as self-paced uses OpenAI throughout)
             tokens_per_chat = chat_msgs_df.groupby('chatID')['totalTokens'].sum().reset_index()
+            
+            # Fast cross-tabulation for roles
+            role_counts = chat_msgs_df.groupby(['chatID', 'role']).size().unstack(fill_value=0).reset_index()
+            if 'user' not in role_counts.columns: role_counts['user'] = 0
+            if 'assistant' not in role_counts.columns: role_counts['assistant'] = 0
+            
+            role_counts = role_counts.rename(columns={'user': 'userMessagesCount', 'assistant': 'botMessagesCount'})
+            role_counts['turnsCount'] = role_counts['userMessagesCount'] + role_counts['botMessagesCount']
+            
+            chat_stats = pd.merge(tokens_per_chat, role_counts[['chatID', 'userMessagesCount', 'botMessagesCount', 'turnsCount']], on='chatID', how='outer')
+            
         except Exception as e:
             print(f"Could not load ChatMessages.csv optimally: {e}")
-            tokens_per_chat = pd.DataFrame(columns=['chatID', 'totalTokens'])
+            chat_stats = pd.DataFrame(columns=['chatID', 'totalTokens', 'userMessagesCount', 'botMessagesCount', 'turnsCount'])
 
         # 3. Data Transformations & Merges
         
@@ -78,15 +96,29 @@ def process_snapshot(zip_file_path):
             how='left'
         )
         
-        # tokens
+        # tokens and counts
         chats_merged = pd.merge(
             chats_merged,
-            tokens_per_chat,
+            chat_stats,
             left_on='id',
             right_on='chatID',
             how='left'
         )
         chats_merged['totalTokens'] = chats_merged['totalTokens'].fillna(0)
+        chats_merged['turnsCount'] = chats_merged['turnsCount'].fillna(0)
+        chats_merged['userMessagesCount'] = chats_merged['userMessagesCount'].fillna(0)
+        chats_merged['botMessagesCount'] = chats_merged['botMessagesCount'].fillna(0)
+        
+        # Merge transcripts
+        if 'transcripts' in locals():
+            chats_merged = pd.merge(
+                chats_merged,
+                transcripts,
+                left_on='id',
+                right_on='chatID',
+                how='left',
+                suffixes=('', '_tr')
+            )
         
         # Calculate User First Test Date
         # Find the earliest startTime for each user, but ONLY for completed tests
