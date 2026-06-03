@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+env/
+venv/
+ENV/
+
+# Data and Artifacts (Not needed for Streamlit source code)
+snapshot/
+*.zip
+csv_analysis_output.json
+report_output.md
+
+# Analysis scripts (One-offs)
+analyze_csv.py
+generate_report.py
+
+# OS generated files
+.DS_Store
+Thumbs.db
