@@ -1,8 +1,8 @@
 # 📈 BTK Admin Dashboard
 
-Welcome to the BTK Admin Dashboard! This tool allows you to instantly process, analyze, and visualize massive 4GB+ data snapshots completely securely on your local machine.
+Welcome to the BTK Admin Dashboard for the Oral Board Simulator! This tool allows you to visualize and explore all of the data exported from Designli.
 
-Because this dashboard processes massive datasets, it runs directly on your own computer rather than a remote cloud server. You do not need to be a software engineer to run this, just follow the exact steps below!
+Because this dashboard processes massive datasets, it runs directly on your own computer rather than a remote cloud server. In other words, it's very hard to allow for 4 GB+ uploads on websites without much hassle. You do not need to be a software engineer to run this, just follow the exact steps below. Please contact me if you need any help.
 
 ---
 
@@ -16,7 +16,6 @@ Your computer needs a program called Python to run the dashboard.
 4. Complete the installation.
 
 ### Step 2: Download the Dashboard
-You don't need any fancy developer tools to download this code:
 1. Go to the top of this GitHub repository page.
 2. Click the green **"<> Code"** button.
 3. Click **"Download ZIP"**.
