@@ -1,5 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_data_files, copy_metadata
+from PyInstaller.utils.hooks import collect_data_files, copy_metadata, collect_submodules
 
 # Collect streamlit's static files and metadata so the UI renders
 datas = []
@@ -15,12 +15,16 @@ datas += [
     ('.streamlit', '.streamlit')
 ]
 
+# Streamlit uses many dynamic imports internally (like magic_funcs). 
+# We explicitly force PyInstaller to bundle all streamlit submodules.
+hidden_imports = collect_submodules('streamlit')
+
 a = Analysis(
     ['launcher.py'],
     pathex=[],
     binaries=[],
     datas=datas,
-    hiddenimports=[],
+    hiddenimports=hidden_imports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
