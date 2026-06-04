@@ -11,19 +11,25 @@ def process_snapshot(zip_file_path):
     Extracts the uploaded snapshot.zip, loads the CSVs, and joins them into analytical dataframes.
     Cached by Streamlit so it only runs once per unique zip file.
     """
-    # Create a temporary directory to extract the files
-    temp_dir = tempfile.mkdtemp()
+    temp_dir = None
+    target_dir = None
     
     try:
-        # 1. Extract the zip
-        with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-            zip_ref.extractall(temp_dir)
-            
-        # The zip might contain a folder named 'snapshot' or extract files directly.
-        # Let's find the directory that contains the CSVs
-        target_dir = temp_dir
-        if 'snapshot' in os.listdir(temp_dir):
-            target_dir = os.path.join(temp_dir, 'snapshot')
+        # 1. Determine if input is a local directory or a zip file
+        if isinstance(zip_file_path, str) and os.path.isdir(zip_file_path):
+            target_dir = zip_file_path
+            # Check if there is a 'snapshot' subfolder
+            if 'snapshot' in os.listdir(target_dir) and os.path.isdir(os.path.join(target_dir, 'snapshot')):
+                target_dir = os.path.join(target_dir, 'snapshot')
+        else:
+            # Create a temporary directory to extract the files
+            temp_dir = tempfile.mkdtemp()
+            with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+                zip_ref.extractall(temp_dir)
+                
+            target_dir = temp_dir
+            if 'snapshot' in os.listdir(temp_dir):
+                target_dir = os.path.join(temp_dir, 'snapshot')
             
         # 2. Load the CSVs
         users_df = pd.read_csv(os.path.join(target_dir, 'users.csv'))
@@ -138,5 +144,6 @@ def process_snapshot(zip_file_path):
         }
 
     finally:
-        # Cleanup the temp directory
-        shutil.rmtree(temp_dir, ignore_errors=True)
+        # Cleanup the temp directory if one was created
+        if temp_dir is not None:
+            shutil.rmtree(temp_dir, ignore_errors=True)

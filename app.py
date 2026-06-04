@@ -23,16 +23,29 @@ st.title("📈 BTK Admin Dashboard")
 
 # --- FILE UPLOAD ---
 st.sidebar.header("1. Data Upload")
-uploaded_file = st.sidebar.file_uploader("Upload snapshot.zip", type=["zip"])
 
-if uploaded_file is not None:
+upload_method = st.sidebar.radio("Upload Method", ["Web Upload", "Local Path (Fastest)"])
+uploaded_data = None
+
+if upload_method == "Web Upload":
+    uploaded_data = st.sidebar.file_uploader("Upload snapshot.zip", type=["zip"])
+else:
+    local_path = st.sidebar.text_input("Enter path to snapshot.zip or unzipped folder", placeholder="e.g. ./snapshot/")
+    if local_path and local_path.strip() != "":
+        uploaded_data = local_path.strip()
+
+if uploaded_data is not None:
     # Process the data
     with st.spinner("Extracting and processing data..."):
-        data = data_processor.process_snapshot(uploaded_file)
-        users_df = data['users']
-        chats_df = data['chats']
-        
-    st.sidebar.success("Data loaded successfully!")
+        try:
+            data = data_processor.process_snapshot(uploaded_data)
+            users_df = data['users']
+            chats_df = data['chats']
+            
+            st.sidebar.success("Data loaded successfully!")
+        except Exception as e:
+            st.sidebar.error(f"Error loading data: {e}")
+            st.stop()
     
     # --- GLOBAL FILTERS ---
     st.sidebar.header("2. Global Filters")
