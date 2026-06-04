@@ -24,15 +24,7 @@ st.title("📈 BTK Admin Dashboard")
 # --- FILE UPLOAD ---
 st.sidebar.header("1. Data Upload")
 
-upload_method = st.sidebar.radio("Upload Method", ["Web Upload", "Local Path (Fastest)"])
-uploaded_data = None
-
-if upload_method == "Web Upload":
-    uploaded_data = st.sidebar.file_uploader("Upload snapshot.zip", type=["zip"])
-else:
-    local_path = st.sidebar.text_input("Enter path to snapshot.zip or unzipped folder", placeholder="e.g. ./snapshot/")
-    if local_path and local_path.strip() != "":
-        uploaded_data = local_path.strip()
+uploaded_data = st.sidebar.file_uploader("Upload snapshot.zip", type=["zip"])
 
 if uploaded_data is not None:
     # Process the data
