@@ -20,7 +20,7 @@ This guide will refer to these terminal instructions.
 1. Open the **Terminal** app (Press `Command + Space`, type `Terminal`, and hit Enter).
 2. Type `cd ` (make sure there is a space after cd), then drag and drop the unzipped `BTK_admin_dashboard` folder from your Desktop directly into the Terminal window, and hit **Enter**.
 
-![Mac IOS Screenshot](example_pictures/mac-terminal.jpgs.png)
+![Mac IOS Screenshot](example_pictures/mac-terminal.jpg)
 
 ## 🛠️ Setup Instructions
 
