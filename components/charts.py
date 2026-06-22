@@ -232,40 +232,6 @@ def plot_duration_vs_score(chats_df):
     export_df = df[['id', duration_col, 'overallScore']].rename(columns={'id': 'Test ID', duration_col: 'Duration (Mins)', 'overallScore': 'Score'})
     return fig, stats, export_df
 
-def plot_complexity_vs_score(chats_df):
-    df = chats_df[(chats_df['overallScore'] > 0) & chats_df['complexity'].notna()].copy()
-    if len(df) < 2: return None, None, None
-    
-    df = df.sort_values('complexity')
-    
-    fig = px.box(
-        df, x='complexity', y='overallScore',
-        title="Scenario Complexity vs. Overall Score",
-        labels={'complexity': 'Scenario Complexity (1-10)', 'overallScore': 'Overall Score'}
-    )
-    fig.update_xaxes(type='category')
-    
-    stats = None
-    try:
-        import statsmodels.api as sm
-        X = sm.add_constant(df['complexity'])
-        y = df['overallScore']
-        model = sm.OLS(y, X).fit()
-        
-        p_val = model.pvalues.iloc[1] if len(model.pvalues) > 1 else model.pvalues.iloc[0]
-        stats = {'r2': model.rsquared, 'p': p_val}
-        
-        trend_df = df.drop_duplicates(subset=['complexity']).copy()
-        trend_X = sm.add_constant(trend_df['complexity'])
-        trend_df['ols_pred'] = model.predict(trend_X)
-        
-        fig.add_scatter(x=trend_df['complexity'], y=trend_df['ols_pred'], mode='lines', name='OLS Trend', line=dict(color='red', width=3, dash='dot'))
-    except Exception as e:
-        pass
-        
-    fig.update_layout(template="plotly_white", showlegend=False)
-    export_df = df[['id', 'complexity', 'overallScore']].rename(columns={'id': 'Test ID', 'complexity': 'Complexity Level', 'overallScore': 'Score'})
-    return fig, stats, export_df
 
 def plot_tokens_vs_score(chats_df):
     df = chats_df[(chats_df['overallScore'] > 0) & (chats_df['totalTokens'] > 0)].copy()

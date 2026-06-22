@@ -50,9 +50,15 @@ def process_snapshot(zip_file_path):
             
             # Extract transcripts efficiently
             valid_content = chat_msgs_df.dropna(subset=['content']).copy()
-            valid_content = valid_content[valid_content['content'].str.strip().str.startswith('[')]
-            transcripts = valid_content.drop_duplicates(subset=['chatID'], keep='last')[['chatID', 'content']]
+            stripped_content = valid_content['content'].str.strip()
+            
+            transcript_rows = valid_content[stripped_content.str.startswith('[')]
+            transcripts = transcript_rows.drop_duplicates(subset=['chatID'], keep='last')[['chatID', 'content']]
             transcripts.rename(columns={'content': 'transcript'}, inplace=True)
+            
+            performance_rows = valid_content[stripped_content.str.startswith('{')]
+            performances = performance_rows.drop_duplicates(subset=['chatID'], keep='last')[['chatID', 'content']]
+            performances.rename(columns={'content': 'performance'}, inplace=True)
             
             # Aggregate tokens per chat (summing per user request as self-paced uses OpenAI throughout)
             tokens_per_chat = chat_msgs_df.groupby('chatID')['totalTokens'].sum().reset_index()
@@ -124,6 +130,17 @@ def process_snapshot(zip_file_path):
                 right_on='chatID',
                 how='left',
                 suffixes=('', '_tr')
+            )
+            
+        # Merge performance
+        if 'performances' in locals():
+            chats_merged = pd.merge(
+                chats_merged,
+                performances,
+                left_on='id',
+                right_on='chatID',
+                how='left',
+                suffixes=('', '_pf')
             )
         
         # Calculate User First Test Date

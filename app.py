@@ -162,28 +162,82 @@ if uploaded_data is not None:
                 selected_row = u_chats.sort_values('startTime', ascending=False).iloc[selected_idx]
                 
                 st.divider()
-                st.subheader(f"Chat History: {selected_row['examName']}")
+                st.subheader(f"Session Details: {selected_row['examName']}")
                 
-                transcript_str = selected_row.get('transcript', None)
-                if pd.notna(transcript_str):
-                    try:
-                        import json
-                        import re
-                        msgs = json.loads(transcript_str)
-                        for m in msgs:
-                            role = m.get('role', 'user')
-                            content = m.get('message', '')
-                            # Strip <sq id="..."/> tags from the text
-                            content = re.sub(r'<sq id="\d+"/>', '', content).strip()
+                tab_chat, tab_perf = st.tabs(["💬 Chat History", "📊 Performance"])
+                
+                with tab_chat:
+                    transcript_str = selected_row.get('transcript', None)
+                    if pd.notna(transcript_str):
+                        try:
+                            import json
+                            import re
+                            msgs = json.loads(transcript_str)
+                            for m in msgs:
+                                role = m.get('role', 'user')
+                                content = m.get('message', '')
+                                # Strip <sq id="..."/> tags from the text
+                                content = re.sub(r'<sq id="\d+"/>', '', content).strip()
+                                
+                                # Map standard roles to Streamlit chat roles
+                                st_role = "assistant" if role in ["assistant", "system", "bot"] else "user"
+                                with st.chat_message(st_role):
+                                    st.write(content)
+                        except Exception as e:
+                            st.error(f"Transcript could not be parsed: {e}")
+                    else:
+                        st.info("No transcript available for this test.")
+                        
+                with tab_perf:
+                    performance_str = selected_row.get('performance', None)
+                    if pd.notna(performance_str):
+                        try:
+                            import json
+                            perf_data = json.loads(performance_str)
                             
-                            # Map standard roles to Streamlit chat roles
-                            st_role = "assistant" if role in ["assistant", "system", "bot"] else "user"
-                            with st.chat_message(st_role):
-                                st.write(content)
-                    except Exception as e:
-                        st.error(f"Transcript could not be parsed: {e}")
-                else:
-                    st.info("No transcript available for this test.")
+                            st.markdown(f"### {perf_data.get('exam_title', 'Unknown Exam')}")
+                            st.markdown(f"**Surgical Category:** {perf_data.get('surgical_category', 'N/A')} &nbsp;&nbsp;|&nbsp;&nbsp; **Status:** {perf_data.get('pass_status', 'N/A')}")
+                            
+                            # Layout metrics
+                            col1, col2, col3 = st.columns(3)
+                            col1.metric("Overall Score", perf_data.get("overall_score", 0))
+                            col2.metric("Competency Score", perf_data.get("competency_score", 0))
+                            col3.metric("Clarity Score", perf_data.get("clarity_score", 0))
+                            
+                            st.divider()
+                            
+                            st.subheader("Identified Knowledge Gaps")
+                            st.write(perf_data.get('identified_knowledge_gaps', 'None provided.'))
+                            
+                            st.subheader("Professionalism Notes")
+                            st.write(perf_data.get('professionalism_notes', 'None provided.'))
+                            
+                            st.subheader("Curriculum Alignment")
+                            st.write(perf_data.get('curriculum_alignment', 'None provided.'))
+                            
+                            st.subheader("Study Plan")
+                            st.write(perf_data.get('study_plan', 'None provided.'))
+                            
+                            if perf_data.get('test_commentary'):
+                                st.subheader("Test Commentary")
+                                st.write(perf_data.get('test_commentary'))
+                            
+                            st.subheader("References")
+                            refs = []
+                            for k in ['reference1A', 'reference1B', 'reference2A', 'reference2B', 'reference3A', 'reference3B']:
+                                val = perf_data.get(k)
+                                if val and str(val).strip().lower() != 'none':
+                                    refs.append(f"- {val}")
+                            
+                            if refs:
+                                st.markdown("\n".join(refs))
+                            else:
+                                st.write("No references provided.")
+                                
+                        except Exception as e:
+                            st.error(f"Performance data could not be parsed: {e}")
+                    else:
+                        st.info("No performance data available for this test.")
             
     with tab3:
         st.header("Examination Performance")
@@ -258,14 +312,6 @@ if uploaded_data is not None:
                 st.markdown("*Are overall competency scores generally improving over time?*")
                 render_chart_with_export(fig1, df1, "Score Trend Over Time")
                 
-            fig3, stats3, df3 = charts.plot_complexity_vs_score(filtered_chats)
-            if fig3:
-                st.subheader("Scenario Complexity vs. Score")
-                if stats3:
-                    st.info(f"**R²**: {stats3['r2']:.4f} &nbsp;&nbsp;|&nbsp;&nbsp; **P-value**: {stats3['p']:.4e}")
-                st.markdown("*Do higher complexity scenarios accurately reflect lower performance scores?*")
-                render_chart_with_export(fig3, df3, "Complexity vs Score")
-                
         with col_t2:
             fig2, stats2, df2 = charts.plot_duration_vs_score(filtered_chats)
             if fig2:
@@ -281,7 +327,6 @@ if uploaded_data is not None:
         
         exploration_cols = {
             "Overall Score": "overallScore",
-            "Scenario Complexity": "complexity",
             "Total Tokens Used": "totalTokens",
             "Duration (Minutes)": "duration_mins",
             "Total Conversation Turns": "turnsCount",

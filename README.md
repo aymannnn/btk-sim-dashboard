@@ -76,3 +76,31 @@ You only ever have to do the setup above once. From now on, whenever you want to
 1. Once the dashboard opens in your browser, look at the sidebar on the left.
 2. Click **"Upload snapshot.zip"** (or drag and drop your `snapshot.zip` file into the box).
 3. The dashboard will automatically extract and process the data. *Note: If your file is extremely large (e.g., 4GB), please be patient and allow the progress bar to finish without clicking away!*
+
+---
+
+## 🔄 How to Update the Dashboard (Using Git)
+
+If you have Git installed and want to update the dashboard to the latest version, you can use the `git pull` command. 
+
+**For Windows Users:**
+1. Open the `BTK_admin_dashboard` folder on your Desktop.
+2. Click on the file explorer address bar at the very top of the window, type `cmd`, and hit **Enter** to open the terminal.
+3. Type the following command and hit Enter:
+   ```cmd
+   git pull
+   ```
+4. Wait for the update to download. Once it finishes, your dashboard is up to date!
+
+**For Mac Users:**
+1. Open the **Terminal** app (Press `Command + Space`, type `Terminal`, and hit Enter).
+2. Type `cd ` (make sure there is a space after cd), then drag and drop the `BTK_admin_dashboard` folder from your Desktop directly into the Terminal window, and hit **Enter**.
+3. Type the following command and hit Enter:
+   ```bash
+   git pull
+   ```
+4. Wait for the update to download. Once it finishes, your dashboard is up to date!
+
+*(Note: If you originally downloaded the project as a ZIP file, the `git pull` command will give an error. Instead, simply repeat "Step 2: Download the Dashboard" to download the new ZIP file and replace your old folder.)*
+
+*You may always ask Claude ... "please update my github repository with git pull"*.
